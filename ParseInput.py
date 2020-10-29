@@ -12,11 +12,14 @@ def ParseInputDataExtract():
    parser.add_argument('--image')
    parser.add_argument('--channel_names')
    parser.add_argument('--output')
+   parser.add_argument('--intensity_props', nargs = "+")
    #parser.add_argument('--suffix')
    args = parser.parse_args()
    #Create a dictionary object to pass to the next function
    dict = {'masks': args.masks, 'image': args.image,\
-    'channel_names': args.channel_names,'output':args.output}
+    'channel_names': args.channel_names,'output':args.output,
+    'intensity_props': set(args.intensity_props if args.intensity_props is not None else []).union(["mean_intensity"])
+   }
    #Print the dictionary object
    print(dict)
    #Return the dictionary

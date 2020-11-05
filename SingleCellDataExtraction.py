@@ -28,17 +28,12 @@ def MaskChannel(mask_loaded, image_loaded_z, intensity_props = ["mean_intensity"
     for the given channel for each cell"""
     builtin_props = set(intensity_props).intersection(measure._regionprops.PROP_VALS)
     extra_props = set(intensity_props).difference(measure._regionprops.PROP_VALS)
-    dat = measure.regionprops(
-        mask_loaded, image_loaded_z, extra_properties = [globals()[n] for n in extra_props]
+    dat = measure.regionprops_table(
+        mask_loaded, image_loaded_z,
+        properties = tuple(builtin_props),
+        extra_properties = [globals()[n] for n in extra_props]
     )
-    n = len(dat)
-    quants = {n: np.empty(n) for n in intensity_props}
-    for i in range(n):
-        for n in intensity_props:
-            quants[n] = getattr(dat[i], n)
-        # Clear reference to avoid memory leak -- see MaskIDs for explanation.
-        dat[i] = None
-    return quants
+    return dat
 
 
 def MaskIDs(mask):
@@ -47,53 +42,31 @@ def MaskIDs(mask):
 
     Returns a dictionary object"""
 
-    dat = measure.regionprops(mask)
-    n = len(dat)
-
-    # Pre-allocate numpy arrays for all properties we'll calculate.
-    labels = np.empty(n, int)
-    xcoords = np.empty(n)
-    ycoords = np.empty(n)
-    area = np.empty(n, int)
-    minor_axis_length = np.empty(n)
-    major_axis_length = np.empty(n)
-    eccentricity = np.empty(n)
-    solidity = np.empty(n)
-    extent = np.empty(n)
-    orientation = np.empty(n)
-
-    for i in range(n):
-        labels[i] = dat[i].label
-        xcoords[i] = dat[i].centroid[1]
-        ycoords[i] = dat[i].centroid[0]
-        area[i] = dat[i].area
-        major_axis_length[i] = dat[i].major_axis_length
-        minor_axis_length[i] = dat[i].minor_axis_length
-        eccentricity[i] = dat[i].eccentricity
-        solidity[i] = dat[i].solidity
-        extent[i] = dat[i].extent
-        orientation[i] = dat[i].orientation
-        # By clearing the reference to each RegionProperties object, we allow it
-        # and its cache to be garbage collected immediately. Otherwise memory
-        # usage creeps up needlessly while this function is executing.
-        dat[i] = None
+    dat = measure.regionprops_table(
+        mask,
+        properties=("label", "centroid", "area", "major_axis_length", "minor_axis_length", "eccentricity", "solidity", "extent", "orientation")
+    )
 
     IDs = {
-        "CellID": labels,
-        "X_centroid": xcoords,
-        "Y_centroid": ycoords,
-        "column_centroid": xcoords,
-        "row_centroid": ycoords,
-        "Area": area,
-        "MajorAxisLength": major_axis_length,
-        "MinorAxisLength": minor_axis_length,
-        "Eccentricity": eccentricity,
-        "Solidity": solidity,
-        "Extent": extent,
-        "Orientation": orientation,
+        "CellID": "label",
+        "X_centroid": "centroid-1",
+        "Y_centroid": "centroid-0",
+        "column_centroid": "centroid-1",
+        "row_centroid": "centroid-0",
+        "Area": "area",
+        "MajorAxisLength": "major_axis_length",
+        "MinorAxisLength": "minor_axis_length",
+        "Eccentricity": "eccentricity",
+        "Solidity": "solidity",
+        "Extent": "extent",
+        "Orientation": "orientation",
     }
 
-    return IDs
+    dat_formatted = {
+        k: dat[v] for k, v in IDs.items()
+    }
+
+    return dat_formatted
 
 
 def PrepareData(image,z):

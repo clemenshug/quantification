@@ -10,6 +10,7 @@ import os
 import skimage.measure as measure
 
 from pathlib import Path
+from itertools import chain
 import csv
 
 
@@ -140,33 +141,38 @@ def MaskZstack(masks_loaded,image,channel_names_loaded, intensity_props = ["mean
         #Create channel names for this mask
         new_names = [channel_names_loaded[i]+"_"+str(nm) for i in range(len(channel_names_loaded))]
         #Convert the channel names list and the list of intensity values to a dictionary and combine with CellIDs and XY
-        dict_of_chan[nm] = pd.concat(
-            [
-                pd.DataFrame(dict(zip(new_names, [x["mean_intensity"] for x in dict_of_chan[nm]])))
-            ] + [
-                pd.DataFrame(dict(zip([n + "_" + prop_n for n in new_names], [x[prop_n] for x in dict_of_chan[nm]]))) for prop_n
-                in set(intensity_props).difference(["mean_intensity"])
-            ],
-            axis=1
-        )
+        dict_of_chan[nm] = [
+            pd.DataFrame(dict(zip(new_names, [x["mean_intensity"] for x in dict_of_chan[nm]])))
+        ] + [
+            pd.DataFrame(dict(zip([n + "_" + prop_n for n in new_names], [x[prop_n] for x in dict_of_chan[nm]]))) for prop_n
+            in set(intensity_props).difference(["mean_intensity"])
+        ]
 
     #Concatenate all data from all masks to return
-    dat = pd.concat([IDs] + [dict_of_chan[nm] for nm in mask_names], axis=1)
+    dat = pd.concat(chain([IDs], chain.from_iterable(dict_of_chan[nm] for nm in mask_names)), axis=1)
 
     #Get the name of the columns in the dataframe so we can reorder to histoCAT convention
-    cols = list(dat.columns.values)
+    last_cols = (
+        "X_centroid",
+        "Y_centroid",
+        "column_centroid",
+        "row_centroid",
+        "Area",
+        "MajorAxisLength",
+        "MinorAxisLength",
+        "Eccentricity",
+        "Solidity",
+        "Extent",
+        "Orientation",
+    )
     #Reorder the list (Move xy position to end with spatial information)
-    cols.append(cols.pop(cols.index("X_centroid")))
-    cols.append(cols.pop(cols.index("Y_centroid")))
-    cols.append(cols.pop(cols.index("column_centroid")))
-    cols.append(cols.pop(cols.index("row_centroid")))
-    cols.append(cols.pop(cols.index("Area")))
-    cols.append(cols.pop(cols.index("MajorAxisLength")))
-    cols.append(cols.pop(cols.index("MinorAxisLength")))
-    cols.append(cols.pop(cols.index("Eccentricity")))
-    cols.append(cols.pop(cols.index("Solidity")))
-    cols.append(cols.pop(cols.index("Extent")))
-    cols.append(cols.pop(cols.index("Orientation")))
+    def sort_fun(x):
+        try:
+            return last_cols.index(x)
+        except ValueError:
+            return -1
+    cols = sorted(dat.columns.values, key=sort_fun)
+
     #Reindex the dataframe with new order
     dat = dat.reindex(columns=cols)
 

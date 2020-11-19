@@ -11,6 +11,10 @@ Module for single-cell data extraction given a segmentation mask and multi-chann
 
 * `--channel_names` csv file containing the channel names for the z-stack (Ex: ./my_channels.csv)
 
+* `--intensity_props` Additional properties to be quantified.
+    See list at https://scikit-image.org/docs/dev/api/skimage.measure.html#regionprops
+    Additionally available is gini_index.
+
 # Run script
 `python CommandSingleCellExtraction.py --masks ./segmentation/cellMask.tif ./segmentation/membraneMask.tif --image ./registration/Exemplar_001.h5  --output ./feature_extraction --channel_names ./my_channels.csv`
 

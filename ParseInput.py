@@ -12,7 +12,14 @@ def ParseInputDataExtract():
    parser.add_argument('--image')
    parser.add_argument('--channel_names')
    parser.add_argument('--output')
-   parser.add_argument('--intensity_props', nargs = "+")
+   parser.add_argument(
+      '--intensity_props', nargs = "+",
+      help="""
+         Additional properties to be quantified.
+         See list at https://scikit-image.org/docs/dev/api/skimage.measure.html#regionprops
+         Additionally available is gini_index.
+      """
+   )
    #parser.add_argument('--suffix')
    args = parser.parse_args()
    #Create a dictionary object to pass to the next function

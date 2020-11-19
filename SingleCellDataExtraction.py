@@ -145,7 +145,7 @@ def MaskZstack(masks_loaded,image,channel_names_loaded, intensity_props = ["mean
             pd.DataFrame(dict(zip(new_names, [x["mean_intensity"] for x in dict_of_chan[nm]])))
         ] + [
             pd.DataFrame(dict(zip([n + "_" + prop_n for n in new_names], [x[prop_n] for x in dict_of_chan[nm]]))) for prop_n
-            in set(intensity_props).difference(["mean_intensity"])
+            in set(dict_of_chan[nm][0].keys()).difference(["mean_intensity"])
         ]
 
     #Concatenate all data from all masks to return

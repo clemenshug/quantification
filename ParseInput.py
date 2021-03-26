@@ -15,9 +15,11 @@ def ParseInputDataExtract():
    parser.add_argument(
       '--intensity_props', nargs = "+",
       help="""
-         Additional properties to be quantified.
+         Space separated list of additional metrics to be calculated.
          See list at https://scikit-image.org/docs/dev/api/skimage.measure.html#regionprops
-         Additionally available is gini_index.
+         Additionally available is gini_index, which calculates a single number
+         between 0 and 1, representing how unequal the signal is distributed in each region.
+         See https://en.wikipedia.org/wiki/Gini_coefficient
       """
    )
    #parser.add_argument('--suffix')
